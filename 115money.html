@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>115年度行政院總預算案互動專題</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f8fafc;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .bar-fill {
+            transition: width 1s ease-out;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <!-- App Container -->
+    <div id="app" class="min-h-screen flex flex-col relative overflow-hidden">
+        
+        <!-- Header -->
+        <header class="w-full bg-white/90 backdrop-blur-md border-b border-slate-200 fixed top-0 z-50">
+            <div class="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="pie-chart" class="text-blue-600"></i>
+                    <span class="font-bold text-lg tracking-wide">預算觀測站</span>
+                </div>
+                <div class="text-sm text-slate-500">115年度中央政府總預算案</div>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="flex-grow pt-20 pb-10 px-4">
+            <div id="content-container" class="max-w-4xl mx-auto">
+                <!-- Javascript will inject content here -->
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-slate-900 text-slate-400 py-8 text-center text-sm">
+            <p>資料來源：行政院主計總處 115年度歲出政事別預算表</p>
+            <p class="mt-2">本網頁為新聞專題互動演示原型</p>
+        </footer>
+    </div>
+
+    <script>
+        // --- 1. DATA PREPARATION (Based on uploaded PDFs) ---
+        // 模擬從PDF提取的數據結構
+        const budgetData = [
+            {
+                category: "國務支出",
+                icon: "crown",
+                description: "總統府及國家安全會議相關支出",
+                total: 1410442, // 千元
+                items: [
+                    { agency: "總統府", program: "一般行政", amount: 1163811, status: "審查中", tags: ["基本維運", "人事費"] },
+                    { agency: "總統府", program: "國務機要", amount: 30000, status: "審查中", tags: ["首長特別費", "機要"] },
+                    { agency: "總統府", program: "國家慶典", amount: 17657, status: "審查中", tags: ["活動", "慶典"] },
+                    { agency: "國家安全會議", program: "諮詢研究業務", amount: 33853, status: "審查中", tags: ["國安", "研究"] }
+                ]
+            },
+            {
+                category: "行政支出",
+                icon: "briefcase",
+                description: "行政院及主計、人事等幕僚機關支出",
+                total: 6876664,
+                items: [
+                    { agency: "行政院", program: "施政及法制業務", amount: 14370, status: "已初審", tags: ["政策規劃", "法制"] },
+                    { agency: "行政院", program: "聯合服務業務", amount: 37887, status: "審查中", tags: ["民眾服務", "跨部會"] },
+                    { agency: "行政院", program: "資訊管理", amount: 72990, status: "需補件", tags: ["數位轉型", "資安", "設備"] },
+                    { agency: "行政院", program: "人權及轉型正義", amount: 13150, status: "審查中", tags: ["人權", "轉型正義"] },
+                    { agency: "主計總處", program: "國勢普查業務", amount: 422613, status: "審查中", tags: ["統計", "大數據"] },
+                    { agency: "人事行政總處", program: "公務人力發展學院-訓練輔導", amount: 360795, status: "已初審", tags: ["教育訓練", "公務員"] }
+                ]
+            },
+            {
+                category: "立法支出",
+                icon: "gavel",
+                description: "立法院運作與問政相關支出",
+                total: 3876968,
+                items: [
+                    { agency: "立法院", program: "委員問政業務", amount: 1516164, status: "審查中", tags: ["問政", "立法"] },
+                    { agency: "立法院", program: "國會圖書業務", amount: 45589, status: "已初審", tags: ["圖書", "資訊"] },
+                    { agency: "立法院", program: "一般建築及設備", amount: 264666, status: "審查中", tags: ["設備", "營建"] }
+                ]
+            },
+             {
+                category: "司法支出",
+                icon: "scale",
+                description: "司法院、法務部及相關機關支出",
+                total: 81227098,
+                items: [
+                    { agency: "司法院", program: "憲法訴訟業務", amount: 9631, status: "審查中", tags: ["憲法", "法制"] },
+                    { agency: "法務部", program: "法務行政", amount: 1582635, status: "審查中", tags: ["法制", "行政"] },
+                    { agency: "調查局", program: "鑑識科學及通訊監察", amount: 1515829, status: "審查中", tags: ["科技偵查", "資安"] }
+                ]
+            }
+        ];
+
+        // 提取所有唯一標籤
+        const allTags = [...new Set(budgetData.flatMap(cat => cat.items.flatMap(item => item.tags)))];
+
+        // 狀態管理
+        const state = {
+            step: 0, // 0: Leading, 1: Category, 2: Keywords, 3: Result
+            selectedCategory: null,
+            selectedTag: null
+        };
+
+        // --- 2. RENDER FUNCTIONS ---
+
+        const container = document.getElementById('content-container');
+
+        // 輔助函式：數字轉貨幣格式
+        const formatMoney = (num) => {
+            return new Intl.NumberFormat('zh-TW').format(num);
+        };
+        
+        // 輔助函式：將千元轉為億/萬
+        const formatReadableMoney = (num) => {
+            const val = num * 1000; // 原始數據單位為千元
+            if (val >= 100000000) {
+                return (val / 100000000).toFixed(2) + " 億";
+            } else {
+                return (val / 10000).toFixed(0) + " 萬";
+            }
+        };
+
+        // 渲染：Leading Page
+        function renderLeadingPage() {
+            container.innerHTML = `
+                <div class="flex flex-col items-center justify-center min-h-[70vh] text-center fade-in">
+                    <div class="bg-blue-100 p-4 rounded-full mb-6">
+                        <i data-lucide="banknote" class="w-12 h-12 text-blue-600"></i>
+                    </div>
+                    <h1 class="text-4xl md:text-6xl font-black text-slate-900 mb-6 leading-tight">
+                        來看看我的錢<br>被政府花去哪裡？
+                    </h1>
+                    <p class="text-xl text-slate-600 mb-10 max-w-lg">
+                        115年度中央政府總預算案解析。<br>
+                        從國務機要到行政運作，每一筆支出都與你有關。
+                    </p>
+                    <button onclick="goToCategory()" class="group bg-blue-600 hover:bg-blue-700 text-white text-xl font-bold py-4 px-10 rounded-full shadow-lg hover:shadow-xl transition-all flex items-center gap-2">
+                        開始探索
+                        <i data-lucide="arrow-right" class="group-hover:translate-x-1 transition-transform"></i>
+                    </button>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        // 渲染：類別選擇
+        function renderCategorySelection() {
+            let cardsHtml = budgetData.map(cat => `
+                <div onclick="selectCategory('${cat.category}')" 
+                     class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:border-blue-500 hover:shadow-md cursor-pointer transition-all group">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="bg-slate-100 p-3 rounded-xl group-hover:bg-blue-100 transition-colors">
+                            <i data-lucide="${cat.icon}" class="w-6 h-6 text-slate-700 group-hover:text-blue-600"></i>
+                        </div>
+                        <span class="text-xs font-bold bg-slate-100 text-slate-600 px-2 py-1 rounded-md">
+                            ${formatReadableMoney(cat.total)}
+                        </span>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-2 group-hover:text-blue-600">${cat.category}</h3>
+                    <p class="text-sm text-slate-500">${cat.description}</p>
+                </div>
+            `).join('');
+
+            container.innerHTML = `
+                <div class="fade-in">
+                    <div class="mb-8">
+                        <button onclick="goToLeading()" class="text-slate-400 hover:text-slate-600 flex items-center gap-1 text-sm mb-4">
+                            <i data-lucide="chevron-left" class="w-4 h-4"></i> 回首頁
+                        </button>
+                        <h2 class="text-3xl font-bold text-slate-900">選擇支出類別</h2>
+                        <p class="text-slate-600 mt-2">請選擇您感興趣的預算大類（依政事別預算總表分類）</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        ${cardsHtml}
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        // 渲染：關鍵字雲
+        function renderKeywords() {
+            const currentCatData = budgetData.find(c => c.category === state.selectedCategory);
+            // 找出該類別下的所有 Tag
+            const tags = [...new Set(currentCatData.items.flatMap(item => item.tags))];
+
+            let tagsHtml = tags.map(tag => `
+                <button onclick="selectTag('${tag}')" 
+                    class="bg-white border border-slate-300 hover:border-blue-500 hover:bg-blue-50 text-slate-700 hover:text-blue-700 px-5 py-3 rounded-full text-lg font-medium transition-all shadow-sm">
+                    #${tag}
+                </button>
+            `).join('');
+
+            container.innerHTML = `
+                <div class="fade-in">
+                    <div class="mb-8">
+                        <button onclick="goToCategory()" class="text-slate-400 hover:text-slate-600 flex items-center gap-1 text-sm mb-4">
+                            <i data-lucide="chevron-left" class="w-4 h-4"></i> 重選類別
+                        </button>
+                        <h2 class="text-3xl font-bold text-slate-900">
+                            <span class="text-blue-600">${state.selectedCategory}</span> 包含哪些重點？
+                        </h2>
+                        <p class="text-slate-600 mt-2">點擊關鍵字，查看具體的預算細項與跨部會計畫</p>
+                    </div>
+                    <div class="flex flex-wrap gap-3 justify-center py-10">
+                        ${tagsHtml}
+                    </div>
+                     <div class="mt-8 p-4 bg-yellow-50 rounded-lg border border-yellow-200 text-sm text-yellow-800 flex items-start gap-3">
+                        <i data-lucide="info" class="w-5 h-5 flex-shrink-0 mt-0.5"></i>
+                        <p>提示：部分關鍵字可能涉及跨機關或跨計畫的預算編列。系統將自動為您整合顯示。</p>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        // 渲染：最終結果清單
+        function renderResult() {
+            const currentCatData = budgetData.find(c => c.category === state.selectedCategory);
+            // 篩選出包含該 tag 的 items
+            const filteredItems = currentCatData.items.filter(item => item.tags.includes(state.selectedTag));
+
+            // 計算這個 Tag 下的總金額
+            const tagTotal = filteredItems.reduce((acc, curr) => acc + curr.amount, 0);
+
+            let rowsHtml = filteredItems.map(item => {
+                // 計算 bar 的長度 (相對於這個 tag 總額的比例)
+                const percentage = Math.round((item.amount / tagTotal) * 100);
+                
+                // 狀態顏色
+                let statusColor = "bg-slate-100 text-slate-600";
+                if(item.status === "已初審") statusColor = "bg-green-100 text-green-700";
+                if(item.status === "需補件") statusColor = "bg-red-100 text-red-700";
+                if(item.status === "審查中") statusColor = "bg-blue-100 text-blue-700";
+
+                return `
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm mb-4">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <span class="text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-1 rounded mb-1 inline-block">
+                                ${item.agency}
+                            </span>
+                            <h4 class="text-lg font-bold text-slate-900">${item.program}</h4>
+                        </div>
+                        <span class="text-xs font-bold px-2 py-1 rounded ${statusColor}">
+                            ${item.status}
+                        </span>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-slate-500">預算金額</span>
+                            <span class="font-mono font-bold text-slate-800">$${formatMoney(item.amount * 1000)}</span>
+                        </div>
+                        <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                            <div class="bg-blue-600 h-2.5 rounded-full bar-fill" style="width: 0%"></div> 
+                            <!-- width will be set by JS for animation -->
+                        </div>
+                        <div class="text-right text-xs text-slate-400 mt-1">佔本關鍵字總額 ${percentage}%</div>
+                    </div>
+                    
+                    <!-- 隱藏數據用於動畫 -->
+                    <input type="hidden" class="bar-percent" value="${percentage}">
+                </div>
+                `;
+            }).join('');
+
+            // 如果有多個機關，顯示跨部會提示
+            const agencies = [...new Set(filteredItems.map(i => i.agency))];
+            let crossDeptHtml = '';
+            if (agencies.length > 1) {
+                crossDeptHtml = `
+                    <div class="bg-indigo-50 border-l-4 border-indigo-500 p-4 mb-6 rounded-r-lg">
+                        <h4 class="font-bold text-indigo-900 flex items-center gap-2">
+                            <i data-lucide="layers" class="w-4 h-4"></i>
+                            跨部會/跨計畫項目
+                        </h4>
+                        <p class="text-sm text-indigo-700 mt-1">
+                            關鍵字 <strong>「${state.selectedTag}」</strong> 涉及 
+                            ${agencies.map(a => `<span class="bg-white px-1 rounded mx-1 text-xs border border-indigo-200">${a}</span>`).join('')} 
+                            等 ${agencies.length} 個機關。
+                        </p>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = `
+                <div class="fade-in">
+                    <div class="mb-6">
+                         <button onclick="goToKeywords()" class="text-slate-400 hover:text-slate-600 flex items-center gap-1 text-sm mb-4">
+                            <i data-lucide="chevron-left" class="w-4 h-4"></i> 重選關鍵字
+                        </button>
+                        <h2 class="text-2xl font-bold text-slate-900">
+                            <span class="text-slate-400 text-lg font-normal block mb-1">${state.selectedCategory} / #${state.selectedTag}</span>
+                            預算細目總覽
+                        </h2>
+                    </div>
+
+                    ${crossDeptHtml}
+
+                    <div class="space-y-4">
+                        ${rowsHtml}
+                    </div>
+
+                    <div class="mt-8 p-6 bg-slate-800 text-white rounded-xl">
+                         <h4 class="font-bold text-lg mb-2">編輯台筆記</h4>
+                         <p class="text-slate-300 text-sm leading-relaxed">
+                            此關鍵字下的預算總額約為 <strong>${formatReadableMoney(tagTotal)}</strong>。
+                            請注意，部分預算可能包含經常門（人事、維運）與資本門（設備、建設），
+                            詳細內容需參閱「歲出政事別預算表」細項。
+                         </p>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+
+            // 觸發進度條動畫
+            setTimeout(() => {
+                document.querySelectorAll('.bar-fill').forEach((el, index) => {
+                    const percent = document.querySelectorAll('.bar-percent')[index].value;
+                    el.style.width = percent + '%';
+                });
+            }, 100);
+        }
+
+        // --- 3. NAVIGATION CONTROLLERS ---
+
+        function goToLeading() {
+            state.step = 0;
+            renderLeadingPage();
+            window.scrollTo(0,0);
+        }
+
+        function goToCategory() {
+            state.step = 1;
+            renderCategorySelection();
+            window.scrollTo(0,0);
+        }
+
+        function selectCategory(category) {
+            state.selectedCategory = category;
+            goToKeywords();
+        }
+
+        function goToKeywords() {
+            state.step = 2;
+            renderKeywords();
+            window.scrollTo(0,0);
+        }
+
+        function selectTag(tag) {
+            state.selectedTag = tag;
+            state.step = 3;
+            renderResult();
+            window.scrollTo(0,0);
+        }
+
+        // --- INIT ---
+        window.onload = function() {
+            renderLeadingPage();
+        };
+
+    </script>
+</body>
+</html>
